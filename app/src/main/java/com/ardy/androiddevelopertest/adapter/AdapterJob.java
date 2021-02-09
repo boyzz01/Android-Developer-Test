@@ -180,7 +180,7 @@ public class AdapterJob extends RecyclerView.Adapter <AdapterJob.ViewHolder>{
                 }
             }
         }
-        
+
         notifyDataSetChanged();
     }
 
