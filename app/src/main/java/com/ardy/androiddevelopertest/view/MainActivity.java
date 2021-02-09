@@ -8,9 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
@@ -20,15 +18,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ardy.androiddevelopertest.R;
 import com.ardy.androiddevelopertest.Util.PrefManager;
 import com.ardy.androiddevelopertest.adapter.AdapterJob;
-import com.ardy.androiddevelopertest.api.BaseApiService;
-import com.ardy.androiddevelopertest.api.UtilsApi;
+import com.ardy.androiddevelopertest.api.ApiClient;
+import com.ardy.androiddevelopertest.api.RetrofitClient;
 import com.ardy.androiddevelopertest.response.JobResponse;
 import com.github.angads25.toggle.interfaces.OnToggledListener;
 import com.github.angads25.toggle.model.ToggleableView;
@@ -37,9 +34,14 @@ import com.github.angads25.toggle.widget.LabeledSwitch;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -59,12 +61,15 @@ public class MainActivity extends AppCompatActivity {
     boolean viewFilter = false;
     boolean fulltime = false;
     boolean isFilter = false;
+
     List<JobResponse> searchList;
 
-    ProgressDialog progressDialog;
-    BaseApiService apiService;
-
     ActionBar actionBar;
+    ProgressDialog progressDialog;
+
+    ApiClient apiClient;
+    CompositeDisposable compositeDisposable;
+
 
 
     @Override
@@ -143,25 +148,34 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void loadJob() {
-        apiService = UtilsApi.getAPIService();
+
         progressDialog = ProgressDialog.show(MainActivity.this, null, "Harap Tunggu...", true, false);
-        apiService.getAllPosition().enqueue(new Callback<List<JobResponse>>() {
-            @Override
-            public void onResponse(Call<List<JobResponse>> call, Response<List<JobResponse>> response) {
-                adapterJob = new AdapterJob(MainActivity.this,response.body());
-                recyclerView.setAdapter(adapterJob);
-                searchList = new ArrayList<>();
-                searchList.addAll(response.body());
-                progressDialog.dismiss();
-            }
 
-            @Override
-            public void onFailure(Call<List<JobResponse>> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error "+t.getMessage(), Toast.LENGTH_SHORT).show();
-                progressDialog.dismiss();
+        compositeDisposable.add(apiClient.getAllJob()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(this::handleResponse,this::handleError));
+    }
 
-            }
-        });
+    private void handleResponse(List<JobResponse> jobResponses) {
+        adapterJob = new AdapterJob(MainActivity.this,jobResponses);
+                        recyclerView.setAdapter(adapterJob);
+                        searchList = new ArrayList<>();
+                        searchList.addAll(jobResponses);
+                        progressDialog.dismiss();
+    }
+
+    private void handleError(Throwable error) {
+        Toast.makeText(this, "Error "+error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+        progressDialog.dismiss();
+    }
+
+
+
+    @Override
+    protected void onStop() {
+        compositeDisposable.clear();
+        super.onStop();
     }
 
     private void init() {
@@ -181,6 +195,9 @@ public class MainActivity extends AppCompatActivity {
         actionBar = getSupportActionBar();
         getSupportActionBar().setTitle("Job List");
 
+        Retrofit retrofit = RetrofitClient.getInstance();
+        apiClient = retrofit.create(ApiClient.class);
+        compositeDisposable = new CompositeDisposable();
     }
 
     @Override

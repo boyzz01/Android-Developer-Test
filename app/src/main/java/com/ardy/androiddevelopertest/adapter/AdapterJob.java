@@ -129,34 +129,58 @@ public class AdapterJob extends RecyclerView.Adapter <AdapterJob.ViewHolder>{
             jobList.clear();
             jobList.addAll(itemsCopy);
 
-        } else{
+        } else if (text.isEmpty() && location.isEmpty() && fulltime) {
             jobList.clear();
-            text = text.toLowerCase();
-            for(JobResponse item: itemsCopy){
-
-
-                if (fulltime){
-                    if (location.isEmpty()){
-                        if((item.getDescription().toLowerCase().contains(text) || item.getTitle().toLowerCase().contains(text) || item.getCompany().toLowerCase().contains(text) || item.getLocation().toLowerCase().contains(location)) && (item.getType().toLowerCase().contains("full time"))){
-                            jobList.add(item);
-                        }
-                    }
-                    else {
-                        if((item.getDescription().toLowerCase().contains(text) || item.getTitle().toLowerCase().contains(text) || item.getCompany().toLowerCase().contains(text)) && ((item.getLocation().toLowerCase().contains(location)) && (item.getType().toLowerCase().contains("full time")))){
-                            jobList.add(item);
-                        }
-                    }
-
+            for(JobResponse item: itemsCopy) {
+                if(item.getType().toLowerCase().contains("full time")){
+                    jobList.add(item);
                 }
-                else{
-
-                    if((item.getDescription().toLowerCase().contains(text) || item.getTitle().toLowerCase().contains(text) || item.getCompany().toLowerCase().contains(text) || item.getLocation().toLowerCase().contains(location))){
-                        jobList.add(item);
-                    }
+            }
+        } else if (text.isEmpty() && !location.isEmpty() && !fulltime) {
+            jobList.clear();
+            for(JobResponse item: itemsCopy) {
+                if(item.getLocation().toLowerCase().contains(location)){
+                    jobList.add(item);
                 }
-
             }
         }
+        else if (text.isEmpty() && !location.isEmpty() && fulltime) {
+            jobList.clear();
+            for(JobResponse item: itemsCopy) {
+                if(((item.getLocation().toLowerCase().contains(location)) && (item.getType().toLowerCase().contains("full time")))){
+                    jobList.add(item);
+                }
+            }
+        }  else if (!text.isEmpty() && location.isEmpty() && !fulltime) {
+            jobList.clear();
+            for(JobResponse item: itemsCopy) {
+                if(item.getDescription().toLowerCase().contains(text) || item.getTitle().toLowerCase().contains(text) || item.getCompany().toLowerCase().contains(text)){
+                    jobList.add(item);
+                }
+            }
+        } else if (!text.isEmpty() && location.isEmpty() && fulltime) {
+            jobList.clear();
+            for (JobResponse item : itemsCopy) {
+                if (item.getDescription().toLowerCase().contains(text) || item.getTitle().toLowerCase().contains(text) || item.getCompany().toLowerCase().contains(text) && (item.getType().toLowerCase().contains("full time"))) {
+                    jobList.add(item);
+                }
+            }
+        } else if (!text.isEmpty() && !location.isEmpty() && !fulltime) {
+            jobList.clear();
+            for (JobResponse item : itemsCopy) {
+                if (item.getDescription().toLowerCase().contains(text) || item.getTitle().toLowerCase().contains(text) || item.getCompany().toLowerCase().contains(text) && (item.getLocation().toLowerCase().contains(location))) {
+                    jobList.add(item);
+                }
+            }
+        }else if (!text.isEmpty() && !location.isEmpty() && fulltime) {
+            jobList.clear();
+            for (JobResponse item : itemsCopy) {
+                if ((item.getDescription().toLowerCase().contains(text) || item.getTitle().toLowerCase().contains(text) || item.getCompany().toLowerCase().contains(text)) && (item.getLocation().toLowerCase().contains(location)) && (item.getType().toLowerCase().contains("full time")) ) {
+                    jobList.add(item);
+                }
+            }
+        }
+        
         notifyDataSetChanged();
     }
 

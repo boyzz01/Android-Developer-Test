@@ -4,23 +4,19 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 public class RetrofitClient {
 
-    private static Retrofit retrofit = null;
+    private static Retrofit ourInstance;
 
-    public static Retrofit getClient(String baseUrl){
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
-
-        if (retrofit == null){
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl)
+    public static Retrofit getInstance() {
+        if (ourInstance == null)
+            ourInstance = new Retrofit.Builder()
+                    .baseUrl("https://jobs.github.com/")
                     .addConverterFactory(GsonConverterFactory.create())
-                    .client(client)
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .build();
-        }
-        return retrofit;
+        return ourInstance;
     }
 }
